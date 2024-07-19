@@ -1,0 +1,41 @@
+
+/* TFM : La felicidad en España: Un análisis multivariante */
+/* Importamos los datos */
+
+proc import datafile = 'C:\EncuestaINE.csv'
+out=work.Encuesta
+dbms=csv
+replace;
+getnames=yes;
+run;
+
+/* Analisis Factorial − Factores Comunes*/
+
+proc factor data = work.Encuesta (DROP = PW090 PL076 PL074 PL090 PS050\_\_4
+PH050\_NA PS060\_4 \\ PS040\_7 PH070\_NA) plots=ALL
+outstat = ACF
+out = ACF1
+priors = smc
+residuals nfact=15 MSA rotate = varimax;
+var PL060 −− PS102\_4;
+run;
+
+/* Union salida de factores ACF1 con variable dependiente PW090*/
+
+proc sql;
+create table ACF2 as
+select b.pb030, b.Factor1, b.Factor2, b.Factor3, b.Factor4, b.Factor5,
+b.Factor6, b.Factor7, b.Factor8, b.Factor9, b.Factor10, b.Factor11,
+b.Factor12, b.Factor13, b.Factor14, b.Factor15, a.PW090
+from Encuesta as a
+inner join ACF1 as b
+on a.pb030 = b.pb030; /*columna id */
+quit;
+
+/* Exportamos a Excel */
+
+proc export data=ACF2
+outfile='C:\Factores.xlsx'
+dbms=xlsx
+replace;
+run;
